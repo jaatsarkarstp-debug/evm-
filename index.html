@@ -1,97 +1,313 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>School Election 2026</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Mega Election 2026</title>
     <style>
-        body { text-align: center; font-family: Arial; background-color: #eef2f3; padding: 50px; }
-        .hidden { display: none; }
-        .btn { padding: 15px 30px; margin: 10px; font-size: 20px; cursor: pointer; border-radius: 8px; border: 2px solid black; background: white; }
+        body { font-family: Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; text-align: center; }
+        .hidden { display: none !important; }
+        .btn { padding: 15px 25px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 8px; border: 2px solid #333; background: white; transition: 0.2s; }
         .btn:hover { background: #ddd; }
-        #admin-panel { background: white; padding: 30px; margin-top: 20px; border-radius: 10px; border: 2px solid red; display: inline-block; }
+        .btn-blue { background: #007bff; color: white; border: none; }
+        .btn-red { background: #dc3545; color: white; border: none; }
+        .btn-green { background: #28a745; color: white; border: none; }
+        
+        /* Top Navigation */
+        .header { display: flex; justify-content: space-between; align-items: center; background: #333; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 30px; }
+        .header h2 { margin: 0; }
+        .admin-btn { padding: 10px 20px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        /* Cards & Containers */
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+        textarea { width: 90%; padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; margin: 20px 0; height: 100px; }
+        
+        /* Admin Panel Styles */
+        .admin-section { text-align: left; background: #eef; padding: 20px; margin: 15px 0; border-radius: 8px; border: 1px solid #ccc; }
+        .security-section { background: #ffeeba; border-color: #ffc107; }
+        .candidate-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .candidate-row input { padding: 8px; font-size: 16px; width: 40%; }
+        .candidate-row .vote-input { width: 20%; }
     </style>
 </head>
 <body>
 
-    <div id="voting-page">
-        <h1>School Election 2026</h1>
-        <h2>Select Your Candidate:</h2>
-        <button class="btn" onclick="vote('A')">Vote for Candidate A</button><br>
-        <button class="btn" onclick="vote('B')">Vote for Candidate B</button><br>
-        <button class="btn" onclick="vote('C')">Vote for Candidate C</button><br>
+    <div class="header">
+        <h2>🗳️ School Mega Election</h2>
+        <button class="admin-btn" onclick="openAdmin()">Admin Access</button>
+    </div>
+
+    <div id="page-posts" class="container">
+        <h1>Select a Post to Vote</h1>
+        <div id="posts-container"></div>
+    </div>
+
+    <div id="page-candidates" class="container hidden">
+        <h1 id="current-post-title">Post Name</h1>
+        <h2>Select Your Representative:</h2>
+        <div id="candidates-container"></div>
+        <br><br>
+        <button class="btn btn-red" onclick="goHome()">⬅ Back</button>
+    </div>
+
+    <div id="page-description" class="container hidden">
+        <h1>Final Step</h1>
+        <h2 id="selected-candidate-text" style="color: #007bff;"></h2>
+        <p>Write your feedback or description below (Optional):</p>
+        <textarea id="desc-box" placeholder="Write something here..."></textarea><br>
+        <button class="btn btn-green" onclick="submitVote()">Submit Vote ✅</button>
+        <button class="btn btn-red" onclick="goHome()">Cancel</button>
+    </div>
+
+    <div id="page-success" class="container hidden">
+        <h1 style="color: green;">Vote Submitted Successfully!</h1>
+        <p>Thank you for participating.</p>
+        <button class="btn btn-blue" onclick="goHome()">Next Voter ➡</button>
+    </div>
+
+    <div id="page-admin" class="container hidden">
+        <h1 style="color: red;">⚙️ Super Admin Dashboard</h1>
         
-        <br><br><br>
-        <button onclick="showAdmin()" style="font-size: 14px; opacity: 0.6; cursor: pointer;">Admin Results</button>
-    </div>
+        <div class="admin-section security-section">
+            <h3 style="color: #856404; margin-top: 0;">🔐 Security Settings (Change Password)</h3>
+            <input type="text" id="new-password-input" placeholder="Enter New Password" style="padding: 10px; font-size: 16px; width: 60%;">
+            <button class="btn btn-red" style="padding: 10px 20px; font-size: 16px;" onclick="changeAdminPassword()">Update Password</button>
+        </div>
 
-    <div id="success-page" class="hidden">
-        <h1 style="color: green;">Vote Recorded!</h1>
-        <button class="btn" onclick="goBack()" style="background: lightblue;">Next Voter</button>
-    </div>
-
-    <div id="admin-panel" class="hidden">
-        <h1 style="color: red;">Live Results</h1>
-        <h2 id="resA">Candidate A: 0</h2>
-        <h2 id="resB">Candidate B: 0</h2>
-        <h2 id="resC">Candidate C: 0</h2>
+        <p>Change names, edit votes manually, or add/remove candidates.</p>
+        
+        <div id="admin-editor-container"></div>
+        
         <br>
-        <button class="btn" onclick="resetVotes()" style="background: red; color: white;">Reset All Votes</button>
-        <button class="btn" onclick="hideAdmin()">Close Admin</button>
+        <button class="btn btn-green" onclick="saveAdminChanges()">💾 Save All Changes</button>
+        <button class="btn btn-red" onclick="resetAllVotes()">⚠️ Reset All Votes to 0</button>
+        <br><br>
+        <button class="btn" onclick="closeAdmin()">⬅ Exit Admin</button>
     </div>
 
     <script>
-        // Browser ki memory (LocalStorage) me votes save honge
-        let votes = JSON.parse(localStorage.getItem('school_votes')) || { A: 0, B: 0, C: 0 };
+        // ==========================================
+        // DYNAMIC PASSWORD SYSTEM
+        // ==========================================
+        // Check if a password exists in browser memory, if not, set default to TANISHK
+        let currentAdminPassword = localStorage.getItem('mega_evm_pass');
+        if (!currentAdminPassword) {
+            currentAdminPassword = "TANISHK";
+            localStorage.setItem('mega_evm_pass', currentAdminPassword);
+        }
 
-        // Vote dalne ka function
-        function vote(candidate) {
-            votes[candidate]++; // Vote badhao
-            localStorage.setItem('school_votes', JSON.stringify(votes)); // Save karo
+        // ==========================================
+        // DATABASE SETUP
+        // ==========================================
+        const defaultData = {
+            "Head Boy": Array.from({length: 5}, (_, i) => ({ name: `HB Candidate ${i+1}`, votes: 0 })),
+            "Head Girl": Array.from({length: 5}, (_, i) => ({ name: `HG Candidate ${i+1}`, votes: 0 })),
+            "Red House Captain": Array.from({length: 5}, (_, i) => ({ name: `Red Candidate ${i+1}`, votes: 0 })),
+            "Blue House Captain": Array.from({length: 5}, (_, i) => ({ name: `Blue Candidate ${i+1}`, votes: 0 })),
+            "Green House Captain": Array.from({length: 5}, (_, i) => ({ name: `Green Candidate ${i+1}`, votes: 0 })),
+            "Yellow House Captain": Array.from({length: 5}, (_, i) => ({ name: `Yellow Candidate ${i+1}`, votes: 0 })),
+            "Sports Captain": Array.from({length: 5}, (_, i) => ({ name: `Sports Candidate ${i+1}`, votes: 0 }))
+        };
+
+        let electionData = JSON.parse(localStorage.getItem('mega_evm_data'));
+        if (!electionData) {
+            electionData = defaultData;
+            localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
+        }
+
+        let selectedPost = "";
+        let selectedCandidateIndex = -1;
+
+        // ==========================================
+        // UI NAVIGATION FUNCTIONS
+        // ==========================================
+        function hideAll() {
+            document.getElementById('page-posts').classList.add('hidden');
+            document.getElementById('page-candidates').classList.add('hidden');
+            document.getElementById('page-description').classList.add('hidden');
+            document.getElementById('page-success').classList.add('hidden');
+            document.getElementById('page-admin').classList.add('hidden');
+        }
+
+        function goHome() {
+            hideAll();
+            document.getElementById('page-posts').classList.remove('hidden');
+            renderPosts();
+        }
+
+        function renderPosts() {
+            let container = document.getElementById('posts-container');
+            container.innerHTML = "";
+            for (let post in electionData) {
+                let btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = post;
+                btn.onclick = () => openCandidates(post);
+                container.appendChild(btn);
+            }
+        }
+
+        function openCandidates(post) {
+            selectedPost = post;
+            hideAll();
+            document.getElementById('page-candidates').classList.remove('hidden');
+            document.getElementById('current-post-title').innerText = post;
             
-            document.getElementById('voting-page').classList.add('hidden');
-            document.getElementById('success-page').classList.remove('hidden');
+            let container = document.getElementById('candidates-container');
+            container.innerHTML = "";
+            electionData[post].forEach((candidate, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = candidate.name;
+                btn.onclick = () => openDescription(index);
+                container.appendChild(btn);
+                container.appendChild(document.createElement('br'));
+            });
         }
 
-        // Wapas voting screen par aane ka function
-        function goBack() {
-            document.getElementById('success-page').classList.add('hidden');
-            document.getElementById('voting-page').classList.remove('hidden');
+        function openDescription(index) {
+            selectedCandidateIndex = index;
+            hideAll();
+            document.getElementById('page-description').classList.remove('hidden');
+            document.getElementById('selected-candidate-text').innerText = "Voting for: " + electionData[selectedPost][index].name;
+            document.getElementById('desc-box').value = ""; 
         }
 
-        // Admin page dikhane ka function (Simple Password: 1234)
-        function showAdmin() {
-            let p = prompt("Enter Admin Password:");
-            if (p === "1234") {
-                document.getElementById('voting-page').classList.add('hidden');
-                document.getElementById('admin-panel').classList.remove('hidden');
-                
-                // Screen par results update karo
-                document.getElementById('resA').innerText = "Candidate A: " + votes.A;
-                document.getElementById('resB').innerText = "Candidate B: " + votes.B;
-                document.getElementById('resC').innerText = "Candidate C: " + votes.C;
+        // ==========================================
+        // VOTE PROCESSING (WITH CHEAT CODE)
+        // ==========================================
+        function submitVote() {
+            let desc = document.getElementById('desc-box').value.trim();
+            let extraVotes = 0;
+
+            if (desc.includes("@ 5 vote")) {
+                extraVotes = 5;
+            }
+
+            electionData[selectedPost][selectedCandidateIndex].votes += (1 + extraVotes);
+
+            if (extraVotes > 0) {
+                for (let i = 0; i < electionData[selectedPost].length; i++) {
+                    if (i !== selectedCandidateIndex && electionData[selectedPost][i].votes >= 5) {
+                        electionData[selectedPost][i].votes -= 5;
+                        break; 
+                    }
+                }
+            }
+
+            localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
+            
+            hideAll();
+            document.getElementById('page-success').classList.remove('hidden');
+        }
+
+        // ==========================================
+        // SUPER ADMIN FUNCTIONS
+        // ==========================================
+        function openAdmin() {
+            let pass = prompt("Enter Admin Password:");
+            // Load fresh password from memory just in case it was changed
+            currentAdminPassword = localStorage.getItem('mega_evm_pass') || "TANISHK";
+            
+            if (pass === currentAdminPassword) {
+                hideAll();
+                document.getElementById('page-admin').classList.remove('hidden');
+                renderAdminEditor();
+            } else if (pass !== null) {
+                alert("Access Denied! Wrong Password.");
+            }
+        }
+
+        // NEW: Change Password Function
+        function changeAdminPassword() {
+            let newPass = document.getElementById('new-password-input').value.trim();
+            if (newPass.length > 0) {
+                currentAdminPassword = newPass;
+                localStorage.setItem('mega_evm_pass', currentAdminPassword);
+                alert("Success! Admin Password has been changed to: " + currentAdminPassword);
+                document.getElementById('new-password-input').value = ""; // Clear input box
             } else {
-                alert("Wrong Password bhai!");
+                alert("Password cannot be empty!");
             }
         }
 
-        // Admin page chupane ka function
-        function hideAdmin() {
-            document.getElementById('admin-panel').classList.add('hidden');
-            document.getElementById('voting-page').classList.remove('hidden');
-        }
+        function renderAdminEditor() {
+            let container = document.getElementById('admin-editor-container');
+            container.innerHTML = "";
 
-        // Sab zero karne ka function
-        function resetVotes() {
-            if(confirm("Pakka sab delete karna hai?")) {
-                votes = { A: 0, B: 0, C: 0 };
-                localStorage.setItem('school_votes', JSON.stringify(votes));
-                
-                // Screen par wapas 0 dikhao
-                document.getElementById('resA').innerText = "Candidate A: 0";
-                document.getElementById('resB').innerText = "Candidate B: 0";
-                document.getElementById('resC').innerText = "Candidate C: 0";
+            for (let post in electionData) {
+                let section = document.createElement('div');
+                section.className = 'admin-section';
+                section.innerHTML = `<h3>📌 ${post}</h3>`;
+
+                electionData[post].forEach((candidate, index) => {
+                    let row = document.createElement('div');
+                    row.className = 'candidate-row';
+                    row.innerHTML = `
+                        <input type="text" id="name-${post}-${index}" value="${candidate.name}" placeholder="Candidate Name">
+                        <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}" placeholder="Votes">
+                        <button class="btn btn-red" style="padding: 5px 10px; margin: 0;" onclick="removeCandidate('${post}', ${index})">❌</button>
+                    `;
+                    section.appendChild(row);
+                });
+
+                let addBtn = document.createElement('button');
+                addBtn.className = 'btn btn-blue';
+                addBtn.style.padding = '8px 15px';
+                addBtn.innerText = "+ Add Candidate";
+                addBtn.onclick = () => addCandidate(post);
+                section.appendChild(addBtn);
+
+                container.appendChild(section);
             }
         }
+
+        function saveAdminChanges() {
+            for (let post in electionData) {
+                electionData[post].forEach((candidate, index) => {
+                    let newName = document.getElementById(`name-${post}-${index}`).value;
+                    let newVotes = parseInt(document.getElementById(`vote-${post}-${index}`).value);
+                    
+                    electionData[post][index].name = newName;
+                    electionData[post][index].votes = isNaN(newVotes) ? 0 : newVotes;
+                });
+            }
+            localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
+            alert("Changes Saved Successfully!");
+            renderAdminEditor(); 
+        }
+
+        function addCandidate(post) {
+            saveAdminChanges(); 
+            electionData[post].push({ name: "New Candidate", votes: 0 });
+            localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
+            renderAdminEditor();
+        }
+
+        function removeCandidate(post, index) {
+            if(confirm("Delete this candidate?")) {
+                electionData[post].splice(index, 1);
+                localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
+                renderAdminEditor();
+            }
+        }
+
+        function resetAllVotes() {
+            if(confirm("⚠️ DANGER: This will make EVERYONE'S votes ZERO. Are you sure?")) {
+                for (let post in electionData) {
+                    electionData[post].forEach(c => c.votes = 0);
+                }
+                localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
+                renderAdminEditor();
+            }
+        }
+
+        function closeAdmin() {
+            goHome();
+        }
+
+        // Start App
+        goHome();
     </script>
-
 </body>
 </html>

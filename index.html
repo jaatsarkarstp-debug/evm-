@@ -24,7 +24,6 @@
         .admin-section { text-align: left; background: #eef; padding: 20px; margin: 15px 0; border-radius: 8px; border: 1px solid #ccc; transition: 0.5s; }
         .security-section { background: #ffeeba; border-color: #ffc107; }
         .sync-section { background: #d4edda; border-color: #28a745; }
-        .super-admin-only { border-left: 5px solid red; }
         
         .candidate-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
         .candidate-row input { padding: 8px; font-size: 14px; }
@@ -98,10 +97,10 @@
 
         <div class="admin-section sync-section" id="sync-panel-container">
             <h3 style="color: #155724; margin-top: 0;">🔄 Data Sync</h3>
-            <button class="btn btn-blue" style="font-size: 14px;" onclick="generateExportCode()">📤 Generate PC Code (Global)</button>
+            <button class="btn btn-blue" style="font-size: 14px;" onclick="generateExportCode()">📤 Generate PC Code (For All Panels)</button>
             
-            <div id="super-sync-tools" class="hidden super-admin-only" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #28a745;">
-                <p style="font-size: 14px; color: red;"><b>Admin Data Merge Tool:</b> Paste codes here to merge data.</p>
+            <div id="super-sync-tools" class="hidden" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #28a745;">
+                <p style="font-size: 14px; color: red;"><b>Master Merge Tool (Panel 2 & 3 Only):</b> Paste codes here to merge data.</p>
                 <textarea id="sync-code-box" placeholder="Paste another PC's code here..." style="height: 60px;"></textarea><br>
                 <button class="btn btn-green" style="font-size: 14px;" onclick="mergeIncomingData()">📥 Merge Data (Add Votes)</button>
             </div>
@@ -115,8 +114,7 @@
 
         <div id="admin-editor-container"></div>
         
-        <div id="super-admin-controls" class="hidden">
-            <br>
+        <div id="admin-controls" style="margin-top: 20px;">
             <button class="btn btn-green" onclick="saveAdminChanges()">💾 Save Vote, Name & Image Changes</button>
             <button class="btn btn-red" onclick="resetAllVotes()">⚠️ Reset All Votes to 0</button>
         </div>
@@ -143,7 +141,7 @@
         let usedSyncCodes = JSON.parse(localStorage.getItem('used_sync_codes')) || [];
 
         // ==========================================
-        // DATABASE SETUP (Now with Image support)
+        // DATABASE SETUP
         // ==========================================
         const defaultData = {
             "Head Boy": Array.from({length: 5}, (_, i) => ({ name: `HB Candidate ${i+1}`, votes: 0, image: "" })),
@@ -201,7 +199,6 @@
                 let btn = document.createElement('button');
                 btn.className = 'btn';
                 
-                // Show Image if available
                 let imgHtml = candidate.image ? `<img src="${candidate.image}" alt="Photo" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 15px;">` : "";
                 
                 btn.innerHTML = `${imgHtml} ${candidate.name}`;
@@ -241,16 +238,20 @@
             document.getElementById('page-success').classList.remove('hidden');
         }
 
-        // --- THE 3-TIER ADMIN LOGIC ---
+        // --- THE 3-TIER ADMIN LOGIC (BUG FIXED) ---
         function openAdmin() {
-            let pass = prompt("Enter Access Password:");
+            let passRaw = prompt("Enter Access Password:");
+            if (passRaw === null) return; // If user clicks Cancel
+            
+            let pass = passRaw.trim(); // BUG FIX: Removes accidental spaces
+
             passGlobal = localStorage.getItem('pass_global') || "TanishK2012";
             passSuper = localStorage.getItem('pass_super') || "Tanishk";
             passGod = localStorage.getItem('pass_god') || "TanishkMax";
             
             if (pass === passGlobal) {
                 currentActiveRole = 1;
-                setupAdminUI("🌐 Global Admin Panel (Read Only)", false, false);
+                setupAdminUI("🌐 Global Admin Panel (Editor Mode)", false, false);
                 
             } else if (pass === passSuper) {
                 let code1 = prompt("🔒 Enter Secret Code 1:");
@@ -258,7 +259,7 @@
                     let code2 = prompt("🔒 Enter Secret Code 2:");
                     if (code2 === "17") {
                         currentActiveRole = 2;
-                        setupAdminUI("💻 Super Admin Panel (Laptop Access)", true, false);
+                        setupAdminUI("💻 Super Admin Panel (Master Access)", true, false);
                     } else { alert("Access Denied! Incorrect Code 2."); }
                 } else { alert("Access Denied! Incorrect Code 1."); }
                 
@@ -273,20 +274,18 @@
                     } else { alert("Access Denied! Incorrect Code 2."); }
                 } else { alert("Access Denied! Incorrect Code 1."); }
                 
-            } else if (pass !== null) {
-                alert("Unrecognized Password!");
+            } else {
+                alert("Unrecognized Password! Please check spelling and Capital/Small letters.");
             }
         }
 
-        function setupAdminUI(title, isSuper, isGod) {
+        function setupAdminUI(title, showMergeTools, isGod) {
             document.getElementById('admin-title').innerText = title;
             
-            if (isSuper || isGod) {
+            if (showMergeTools) {
                 document.getElementById('super-sync-tools').classList.remove('hidden');
-                document.getElementById('super-admin-controls').classList.remove('hidden');
             } else {
                 document.getElementById('super-sync-tools').classList.add('hidden');
-                document.getElementById('super-admin-controls').classList.add('hidden');
             }
 
             if (isGod) {
@@ -297,7 +296,7 @@
 
             hideAll();
             document.getElementById('page-admin').classList.remove('hidden');
-            renderAdminEditor(isSuper, isGod);
+            renderAdminEditor(isGod);
         }
 
         function changeAdminPassword() {
@@ -310,7 +309,7 @@
             }
         }
 
-        // --- SYNC LOGIC FIXED WITH ANTI-DUPLICATE CHECK ---
+        // --- SYNC LOGIC ---
         function generateExportCode() {
             let secretCode = btoa(JSON.stringify(electionData));
             prompt("Copy this code:", secretCode); 
@@ -341,12 +340,12 @@
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
                 document.getElementById('sync-code-box').value = ""; 
                 alert("✅ Data Merged Successfully!");
-                renderAdminEditor(currentActiveRole >= 2, currentActiveRole === 3); 
+                renderAdminEditor(currentActiveRole === 3); 
             } catch(e) { alert("❌ Invalid Code Format!"); }
         }
 
-        // --- ADMIN RENDER (NOW WITH IMAGE INPUT SUPPORT) ---
-        function renderAdminEditor(isSuperAdmin, isGodMode) {
+        // --- ADMIN RENDER (EDITORS NOW OPEN FOR ALL ROLES) ---
+        function renderAdminEditor(isGodMode) {
             let container = document.getElementById('admin-editor-container');
             container.innerHTML = "";
 
@@ -357,7 +356,6 @@
 
                 let section = document.createElement('div');
                 section.className = 'admin-section';
-                if(isSuperAdmin) section.classList.add('super-admin-only');
                 section.innerHTML = `<h3>📌 ${post}</h3>`;
 
                 electionData[post].forEach((candidate, index) => {
@@ -366,18 +364,13 @@
                     
                     let percentage = (candidate.votes / maxVotes) * 100;
                     
-                    if (isSuperAdmin) {
-                        row.innerHTML = `
-                            <input type="text" id="name-${post}-${index}" value="${candidate.name}" style="width: 25%;" placeholder="Name">
-                            <input type="text" id="img-${post}-${index}" value="${candidate.image || ''}" style="width: 25%;" placeholder="Paste Image URL">
-                            <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}" style="width: 15%;">
-                            <button class="btn btn-red" style="padding: 5px 10px; margin: 0;" onclick="removeCandidate('${post}', ${index})">❌</button>
-                        `;
-                    } else {
-                        let imgDisplay = candidate.image ? `<img src="${candidate.image}" style="width: 30px; height: 30px; border-radius: 50%; vertical-align: middle; margin-right: 10px;">` : "";
-                        row.innerHTML = `<span style="width: 50%; padding: 8px;">${imgDisplay}${candidate.name}</span>
-                                         <span class="vote-input" style="padding: 8px;">Votes: ${candidate.votes}</span>`;
-                    }
+                    // EVERYONE gets to see the input boxes now!
+                    row.innerHTML = `
+                        <input type="text" id="name-${post}-${index}" value="${candidate.name}" style="width: 25%;" placeholder="Name">
+                        <input type="text" id="img-${post}-${index}" value="${candidate.image || ''}" style="width: 25%;" placeholder="Paste Image URL">
+                        <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}" style="width: 15%;">
+                        <button class="btn btn-red" style="padding: 5px 10px; margin: 0;" onclick="removeCandidate('${post}', ${index})">❌</button>
+                    `;
                     
                     row.innerHTML += `
                         <div class="progress-bar-container">
@@ -388,14 +381,13 @@
                     section.appendChild(row);
                 });
 
-                if (isSuperAdmin) {
-                    let addBtn = document.createElement('button');
-                    addBtn.className = 'btn btn-blue';
-                    addBtn.style.padding = '8px 15px';
-                    addBtn.innerText = "+ Add Candidate";
-                    addBtn.onclick = () => addCandidate(post);
-                    section.appendChild(addBtn);
-                }
+                let addBtn = document.createElement('button');
+                addBtn.className = 'btn btn-blue';
+                addBtn.style.padding = '8px 15px';
+                addBtn.innerText = "+ Add Candidate";
+                addBtn.onclick = () => addCandidate(post);
+                section.appendChild(addBtn);
+                
                 container.appendChild(section);
             }
         }
@@ -418,7 +410,7 @@
             }
         }
 
-        // --- SAVE/DELETE FUNCTIONS (UPDATED FOR IMAGES) ---
+        // --- SAVE/DELETE FUNCTIONS ---
         function saveAdminChangesSilent() {
             for (let post in electionData) {
                 electionData[post].forEach((candidate, index) => {
@@ -436,7 +428,7 @@
                 });
             }
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-            renderAdminEditor(true, currentActiveRole === 3); 
+            renderAdminEditor(currentActiveRole === 3); 
         }
 
         function saveAdminChanges() {
@@ -448,14 +440,14 @@
             saveAdminChangesSilent(); 
             electionData[post].push({ name: "New Candidate", votes: 0, image: "" });
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-            renderAdminEditor(true, currentActiveRole === 3);
+            renderAdminEditor(currentActiveRole === 3);
         }
 
         function removeCandidate(post, index) {
             if(confirm("Delete this candidate?")) {
                 electionData[post].splice(index, 1);
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-                renderAdminEditor(true, currentActiveRole === 3);
+                renderAdminEditor(currentActiveRole === 3);
             }
         }
 
@@ -467,7 +459,7 @@
                 usedSyncCodes = [];
                 localStorage.setItem('used_sync_codes', JSON.stringify(usedSyncCodes));
 
-                renderAdminEditor(true, currentActiveRole === 3);
+                renderAdminEditor(currentActiveRole === 3);
             }
         }
 

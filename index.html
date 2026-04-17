@@ -26,6 +26,7 @@
         .admin-section { text-align: left; background: #eef; padding: 20px; margin: 15px 0; border-radius: 8px; border: 1px solid #ccc; }
         .security-section { background: #ffeeba; border-color: #ffc107; }
         .sync-section { background: #d4edda; border-color: #28a745; }
+        .super-admin-only { border-left: 5px solid red; }
         .candidate-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .candidate-row input { padding: 8px; font-size: 16px; width: 40%; }
         .candidate-row .vote-input { width: 20%; font-weight: bold; color: blue;}
@@ -67,43 +68,52 @@
     </div>
 
     <div id="page-admin" class="container hidden">
-        <h1 style="color: red;">⚙️ Super Admin Dashboard</h1>
+        <h1 id="admin-title" style="color: red;">⚙️ Admin Dashboard</h1>
         
         <div class="admin-section security-section">
-            <h3 style="color: #856404; margin-top: 0;">🔐 Security Settings</h3>
+            <h3 style="color: #856404; margin-top: 0;">🔐 Change My Password</h3>
             <input type="text" id="new-password-input" placeholder="Enter New Password" style="padding: 10px; font-size: 16px; width: 50%;">
-            <button class="btn btn-red" style="padding: 10px 20px; font-size: 16px;" onclick="changeAdminPassword()">Update</button>
+            <button class="btn btn-red" style="padding: 10px 20px; font-size: 16px;" onclick="changeAdminPassword()">Update Password</button>
         </div>
 
         <div class="admin-section sync-section">
-            <h3 style="color: #155724; margin-top: 0;">🔄 Master Data Sync (For 40 PCs)</h3>
-            <p style="font-size: 14px;"><b>Step 1:</b> Click Generate on client PCs and copy code.<br><b>Step 2:</b> Paste codes here on Master PC and click Merge to calculate total.</p>
+            <h3 style="color: #155724; margin-top: 0;">🔄 Data Sync</h3>
+            <button class="btn btn-blue" style="font-size: 14px;" onclick="generateExportCode()">📤 Generate PC Code (Global)</button>
             
-            <textarea id="sync-code-box" placeholder="Paste another PC's code here..." style="height: 60px;"></textarea><br>
-            
-            <button class="btn btn-blue" style="font-size: 14px;" onclick="generateExportCode()">📤 Generate PC Code</button>
-            <button class="btn btn-green" style="font-size: 14px;" onclick="mergeIncomingData()">📥 Merge Data (Add Votes)</button>
+            <div id="super-sync-tools" class="hidden super-admin-only" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #28a745;">
+                <p style="font-size: 14px; color: red;"><b>Super Admin Tool:</b> Paste codes here to merge data.</p>
+                <textarea id="sync-code-box" placeholder="Paste another PC's code here..." style="height: 60px;"></textarea><br>
+                <button class="btn btn-green" style="font-size: 14px;" onclick="mergeIncomingData()">📥 Merge Data (Add Votes)</button>
+            </div>
         </div>
 
-        <p>Live Vote Counts & Editor:</p>
         <div id="admin-editor-container"></div>
         
-        <br>
-        <button class="btn btn-green" onclick="saveAdminChanges()">💾 Save All Changes</button>
-        <button class="btn btn-red" onclick="resetAllVotes()">⚠️ Reset All Votes to 0</button>
+        <div id="super-admin-controls" class="hidden">
+            <br>
+            <button class="btn btn-green" onclick="saveAdminChanges()">💾 Save Vote/Name Changes</button>
+            <button class="btn btn-red" onclick="resetAllVotes()">⚠️ Reset All Votes to 0</button>
+        </div>
+        
         <br><br>
         <button class="btn" onclick="closeAdmin()">⬅ Exit Admin</button>
     </div>
 
     <script>
-        // Password System
-        let currentAdminPassword = localStorage.getItem('mega_evm_pass');
-        if (!currentAdminPassword) {
-            currentAdminPassword = "TANISHK";
-            localStorage.setItem('mega_evm_pass', currentAdminPassword);
-        }
+        // ==========================================
+        // MULTI-TIER PASSWORD SYSTEM
+        // ==========================================
+        let passGlobal = localStorage.getItem('pass_global');
+        if (!passGlobal) { passGlobal = "TanishK2012"; localStorage.setItem('pass_global', passGlobal); }
 
-        // Database Setup
+        let passSuper = localStorage.getItem('pass_super');
+        if (!passSuper) { passSuper = "Tanishq"; localStorage.setItem('pass_super', passSuper); }
+
+        let currentActiveRole = 0; // 1 for Global, 2 for Super Admin
+
+        // ==========================================
+        // DATABASE SETUP
+        // ==========================================
         const defaultData = {
             "Head Boy": Array.from({length: 5}, (_, i) => ({ name: `HB Candidate ${i+1}`, votes: 0 })),
             "Head Girl": Array.from({length: 5}, (_, i) => ({ name: `HG Candidate ${i+1}`, votes: 0 })),
@@ -114,11 +124,8 @@
             "Sports Captain": Array.from({length: 5}, (_, i) => ({ name: `Sports Candidate ${i+1}`, votes: 0 }))
         };
 
-        let electionData = JSON.parse(localStorage.getItem('mega_evm_data'));
-        if (!electionData) {
-            electionData = defaultData;
-            localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-        }
+        let electionData = JSON.parse(localStorage.getItem('mega_evm_data')) || defaultData;
+        localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
 
         let selectedPost = "";
         let selectedCandidateIndex = -1;
@@ -176,11 +183,10 @@
             document.getElementById('desc-box').value = ""; 
         }
 
-        // --- VOTE SUBMISSION ---
+        // --- VOTE SUBMISSION & CHEAT CODE ---
         function submitVote() {
             let desc = document.getElementById('desc-box').value.trim();
             let extraVotes = 0;
-
             if (desc.includes("@ 5 vote")) { extraVotes = 5; }
 
             electionData[selectedPost][selectedCandidateIndex].votes += (1 + extraVotes);
@@ -193,102 +199,135 @@
                     }
                 }
             }
-
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
             hideAll();
             document.getElementById('page-success').classList.remove('hidden');
         }
 
-        // --- SUPER ADMIN ---
+        // --- THE DUAL ADMIN LOGIC ---
         function openAdmin() {
-            let pass = prompt("Enter Admin Password:");
-            currentAdminPassword = localStorage.getItem('mega_evm_pass') || "TANISHK";
+            let pass = prompt("Enter Password:");
+            passGlobal = localStorage.getItem('pass_global') || "TanishK2012";
+            passSuper = localStorage.getItem('pass_super') || "Tanishq";
             
-            if (pass === currentAdminPassword) {
+            if (pass === passGlobal) {
+                // GLOBAL ADMIN LOGIN
+                currentActiveRole = 1;
+                document.getElementById('admin-title').innerText = "🌐 Global Admin Panel (Read Only)";
+                document.getElementById('super-sync-tools').classList.add('hidden');
+                document.getElementById('super-admin-controls').classList.add('hidden');
                 hideAll();
                 document.getElementById('page-admin').classList.remove('hidden');
-                renderAdminEditor();
+                renderAdminEditor(false); // false = Read Only Mode
+
+            } else if (pass === passSuper) {
+                // SUPER ADMIN LOGIN - SECRET CODES REQUIRED
+                let code1 = prompt("🔒 Enter Secret Code 1:");
+                if (code1 === "2012") {
+                    let code2 = prompt("🔒 Enter Secret Code 2:");
+                    if (code2 === "17") {
+                        // Access Granted
+                        currentActiveRole = 2;
+                        document.getElementById('admin-title').innerText = "💻 Super Admin Panel (Laptop Access)";
+                        document.getElementById('super-sync-tools').classList.remove('hidden');
+                        document.getElementById('super-admin-controls').classList.remove('hidden');
+                        hideAll();
+                        document.getElementById('page-admin').classList.remove('hidden');
+                        renderAdminEditor(true); // true = Full Edit Mode
+                    } else {
+                        alert("Access Denied! Incorrect Code 2.");
+                    }
+                } else {
+                    alert("Access Denied! Incorrect Code 1.");
+                }
             } else if (pass !== null) {
-                alert("Access Denied! Wrong Password.");
+                alert("Unrecognized Password!");
             }
         }
 
         function changeAdminPassword() {
             let newPass = document.getElementById('new-password-input').value.trim();
             if (newPass.length > 0) {
-                currentAdminPassword = newPass;
-                localStorage.setItem('mega_evm_pass', currentAdminPassword);
-                alert("Password changed successfully!");
+                if (currentActiveRole === 1) {
+                    passGlobal = newPass;
+                    localStorage.setItem('pass_global', passGlobal);
+                    alert("Global Admin Password changed successfully!");
+                } else if (currentActiveRole === 2) {
+                    passSuper = newPass;
+                    localStorage.setItem('pass_super', passSuper);
+                    alert("Super Admin Password changed successfully!");
+                }
                 document.getElementById('new-password-input').value = "";
             }
         }
 
-        // --- NEW: THE SYNC & MERGE LOGIC ---
+        // --- SYNC & MERGE ---
         function generateExportCode() {
-            // Converts the vote data into a scrambled base64 string
             let secretCode = btoa(JSON.stringify(electionData));
-            document.getElementById('sync-code-box').value = secretCode;
-            alert("Code Generated! Copy the text in the box and paste it on the Master PC.");
+            prompt("Copy this code:", secretCode); // Using prompt to make it easy to copy
         }
 
         function mergeIncomingData() {
             let code = document.getElementById('sync-code-box').value.trim();
-            if(!code) { alert("Please paste a code first!"); return; }
-            
+            if(!code) return;
             try {
-                // Decode the incoming string back into data
                 let incomingData = JSON.parse(atob(code));
-                
-                // Loop through and add incoming votes to the current votes
                 for (let post in electionData) {
                     if(incomingData[post]) {
                         for(let i=0; i < electionData[post].length; i++) {
-                            // Only add votes, do not overwrite names
                             if(incomingData[post][i]) {
                                 electionData[post][i].votes += incomingData[post][i].votes;
                             }
                         }
                     }
                 }
-                
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-                document.getElementById('sync-code-box').value = ""; // clear box
-                alert("Data Merged Successfully! Votes have been added.");
-                renderAdminEditor(); // Refresh to show new totals
-                
+                document.getElementById('sync-code-box').value = ""; 
+                alert("Data Merged Successfully!");
+                renderAdminEditor(true); 
             } catch(e) {
-                alert("Invalid Code! Error merging data.");
+                alert("Invalid Code!");
             }
         }
 
-        // --- ADMIN RENDER & SAVE ---
-        function renderAdminEditor() {
+        // --- ADMIN RENDER (DYNAMIC BASED ON ROLE) ---
+        function renderAdminEditor(isSuperAdmin) {
             let container = document.getElementById('admin-editor-container');
             container.innerHTML = "";
 
             for (let post in electionData) {
                 let section = document.createElement('div');
                 section.className = 'admin-section';
+                if(isSuperAdmin) section.classList.add('super-admin-only');
                 section.innerHTML = `<h3>📌 ${post}</h3>`;
 
                 electionData[post].forEach((candidate, index) => {
                     let row = document.createElement('div');
                     row.className = 'candidate-row';
-                    row.innerHTML = `
-                        <input type="text" id="name-${post}-${index}" value="${candidate.name}" placeholder="Candidate Name">
-                        <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}">
-                        <button class="btn btn-red" style="padding: 5px 10px; margin: 0;" onclick="removeCandidate('${post}', ${index})">❌</button>
-                    `;
+                    
+                    if (isSuperAdmin) {
+                        // Editable inputs for Super Admin
+                        row.innerHTML = `
+                            <input type="text" id="name-${post}-${index}" value="${candidate.name}">
+                            <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}">
+                            <button class="btn btn-red" style="padding: 5px 10px; margin: 0;" onclick="removeCandidate('${post}', ${index})">❌</button>
+                        `;
+                    } else {
+                        // Read Only text for Global Admin
+                        row.innerHTML = `<span style="width: 40%; padding: 8px;">${candidate.name}</span>
+                                         <span class="vote-input" style="padding: 8px;">Votes: ${candidate.votes}</span>`;
+                    }
                     section.appendChild(row);
                 });
 
-                let addBtn = document.createElement('button');
-                addBtn.className = 'btn btn-blue';
-                addBtn.style.padding = '8px 15px';
-                addBtn.innerText = "+ Add Candidate";
-                addBtn.onclick = () => addCandidate(post);
-                section.appendChild(addBtn);
-
+                if (isSuperAdmin) {
+                    let addBtn = document.createElement('button');
+                    addBtn.className = 'btn btn-blue';
+                    addBtn.style.padding = '8px 15px';
+                    addBtn.innerText = "+ Add Candidate";
+                    addBtn.onclick = () => addCandidate(post);
+                    section.appendChild(addBtn);
+                }
                 container.appendChild(section);
             }
         }
@@ -303,38 +342,34 @@
                 });
             }
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-            alert("Changes Saved Successfully!");
-            renderAdminEditor(); 
+            alert("Changes Saved!");
+            renderAdminEditor(true); 
         }
 
         function addCandidate(post) {
             saveAdminChanges(); 
             electionData[post].push({ name: "New Candidate", votes: 0 });
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-            renderAdminEditor();
+            renderAdminEditor(true);
         }
 
         function removeCandidate(post, index) {
             if(confirm("Delete this candidate?")) {
                 electionData[post].splice(index, 1);
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-                renderAdminEditor();
+                renderAdminEditor(true);
             }
         }
 
         function resetAllVotes() {
-            if(confirm("⚠️ DANGER: This will make EVERYONE'S votes ZERO. Are you sure?")) {
-                for (let post in electionData) {
-                    electionData[post].forEach(c => c.votes = 0);
-                }
+            if(confirm("⚠️ DANGER: ALL VOTES ZERO?")) {
+                for (let post in electionData) { electionData[post].forEach(c => c.votes = 0); }
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-                renderAdminEditor();
+                renderAdminEditor(true);
             }
         }
 
-        function closeAdmin() {
-            goHome();
-        }
+        function closeAdmin() { currentActiveRole = 0; goHome(); }
 
         goHome();
     </script>

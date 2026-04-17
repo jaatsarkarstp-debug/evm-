@@ -5,38 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>School Mega Election 2026</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; text-align: center; }
+        /* NORMAL THEME */
+        body { font-family: Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; text-align: center; transition: 0.5s; }
         .hidden { display: none !important; }
-        .btn { padding: 15px 25px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 8px; border: 2px solid #333; background: white; transition: 0.2s; }
+        .btn { padding: 15px 25px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 8px; border: 2px solid #333; background: white; transition: 0.2s; font-weight: bold; }
         .btn:hover { background: #ddd; }
         .btn-blue { background: #007bff; color: white; border: none; }
         .btn-red { background: #dc3545; color: white; border: none; }
         .btn-green { background: #28a745; color: white; border: none; }
         
-        /* Top Navigation */
-        .header { display: flex; justify-content: space-between; align-items: center; background: #333; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #333; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 30px; transition: 0.5s; }
         .header h2 { margin: 0; }
         .admin-btn { padding: 10px 20px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
-        /* Cards & Containers */
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 800px; margin: auto; transition: 0.5s; }
         textarea { width: 90%; padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; margin: 20px 0; height: 100px; }
         
-        /* Admin Panel Styles */
-        .admin-section { text-align: left; background: #eef; padding: 20px; margin: 15px 0; border-radius: 8px; border: 1px solid #ccc; }
+        .admin-section { text-align: left; background: #eef; padding: 20px; margin: 15px 0; border-radius: 8px; border: 1px solid #ccc; transition: 0.5s; }
         .security-section { background: #ffeeba; border-color: #ffc107; }
         .sync-section { background: #d4edda; border-color: #28a745; }
         .super-admin-only { border-left: 5px solid red; }
-        .candidate-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .candidate-row input { padding: 8px; font-size: 16px; width: 40%; }
-        .candidate-row .vote-input { width: 20%; font-weight: bold; color: blue;}
+        
+        .candidate-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+        .candidate-row input { padding: 8px; font-size: 16px; width: 35%; }
+        .candidate-row .vote-input { width: 15%; font-weight: bold; color: blue;}
+        
+        /* Progress Bar for God Mode */
+        .progress-bar-container { width: 100%; background: #444; border-radius: 5px; margin-top: 5px; height: 10px; overflow: hidden; display: none; }
+        .progress-bar { height: 100%; background: #00ff00; width: 0%; transition: width 0.5s; }
+
+        /* =========================================
+           ADVANCED ANALYTICS THEME (Triggered by JS)
+           ========================================= */
+        body.god-mode { background-color: #000; color: #0f0; }
+        body.god-mode .container { background: #111; box-shadow: 0 0 20px #0f0; border: 1px solid #0f0; color: #0f0; }
+        body.god-mode .header { background: #000; border: 1px solid #0f0; color: #0f0; box-shadow: 0 0 10px #0f0; }
+        body.god-mode .admin-section { background: #000; border: 1px solid #0f0; color: #0f0; }
+        body.god-mode input { background: #222; color: #0f0; border: 1px solid #0f0; }
+        body.god-mode .progress-bar-container { display: block; } /* Show bars only in Advanced Mode */
+        body.god-mode h1, body.god-mode h2, body.god-mode h3 { color: #0f0 !important; text-shadow: 0 0 5px #0f0; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h2>🗳️ School Mega Election</h2>
-        <button class="admin-btn" onclick="openAdmin()">Admin Access</button>
+        <button class="admin-btn" id="header-admin-btn" onclick="openAdmin()">Admin Access</button>
     </div>
 
     <div id="page-posts" class="container">
@@ -73,18 +87,24 @@
         <div class="admin-section security-section">
             <h3 style="color: #856404; margin-top: 0;">🔐 Change My Password</h3>
             <input type="text" id="new-password-input" placeholder="Enter New Password" style="padding: 10px; font-size: 16px; width: 50%;">
-            <button class="btn btn-red" style="padding: 10px 20px; font-size: 16px;" onclick="changeAdminPassword()">Update Password</button>
+            <button class="btn btn-red" style="padding: 10px 20px; font-size: 16px;" onclick="changeAdminPassword()">Update</button>
         </div>
 
-        <div class="admin-section sync-section">
+        <div class="admin-section sync-section" id="sync-panel-container">
             <h3 style="color: #155724; margin-top: 0;">🔄 Data Sync</h3>
             <button class="btn btn-blue" style="font-size: 14px;" onclick="generateExportCode()">📤 Generate PC Code (Global)</button>
             
             <div id="super-sync-tools" class="hidden super-admin-only" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #28a745;">
-                <p style="font-size: 14px; color: red;"><b>Super Admin Tool:</b> Paste codes here to merge data.</p>
+                <p style="font-size: 14px; color: red;"><b>Admin Data Merge Tool:</b> Paste codes here to merge data.</p>
                 <textarea id="sync-code-box" placeholder="Paste another PC's code here..." style="height: 60px;"></textarea><br>
                 <button class="btn btn-green" style="font-size: 14px;" onclick="mergeIncomingData()">📥 Merge Data (Add Votes)</button>
             </div>
+        </div>
+
+        <div id="god-mode-tools" class="hidden" style="margin: 20px 0; border: 2px dashed #0f0; padding: 15px;">
+            <h3>⚡ ADVANCED ANALYTICS ACTIVE</h3>
+            <p>Visual Data Progress Bars Unlocked.</p>
+            <button class="btn" style="background: #0f0; color: black; box-shadow: 0 0 10px #0f0;" onclick="highlightWinners()">👑 Declare Winners</button>
         </div>
 
         <div id="admin-editor-container"></div>
@@ -96,20 +116,18 @@
         </div>
         
         <br><br>
-        <button class="btn" onclick="closeAdmin()">⬅ Exit Admin</button>
+        <button class="btn" style="background: grey; color: white;" onclick="closeAdmin()">⬅ Exit Panel</button>
     </div>
 
     <script>
         // ==========================================
-        // MULTI-TIER PASSWORD SYSTEM
+        // 3-TIER PASSWORD SYSTEM
         // ==========================================
-        let passGlobal = localStorage.getItem('pass_global');
-        if (!passGlobal) { passGlobal = "TanishK2012"; localStorage.setItem('pass_global', passGlobal); }
+        let passGlobal = localStorage.getItem('pass_global') || "TanishK2012";
+        let passSuper = localStorage.getItem('pass_super') || "Tanishk";
+        let passGod = localStorage.getItem('pass_god') || "TanishkMax";
 
-        let passSuper = localStorage.getItem('pass_super');
-        if (!passSuper) { passSuper = "Tanishq"; localStorage.setItem('pass_super', passSuper); }
-
-        let currentActiveRole = 0; // 1 for Global, 2 for Super Admin
+        let currentActiveRole = 0; // 1 = Global, 2 = Super, 3 = Advanced Analytics
 
         // ==========================================
         // DATABASE SETUP
@@ -125,7 +143,6 @@
         };
 
         let electionData = JSON.parse(localStorage.getItem('mega_evm_data')) || defaultData;
-        localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
 
         let selectedPost = "";
         let selectedCandidateIndex = -1;
@@ -141,6 +158,7 @@
 
         function goHome() {
             hideAll();
+            document.body.classList.remove('god-mode'); 
             document.getElementById('page-posts').classList.remove('hidden');
             renderPosts();
         }
@@ -183,10 +201,12 @@
             document.getElementById('desc-box').value = ""; 
         }
 
-        // --- VOTE SUBMISSION & CHEAT CODE ---
+        // --- VOTE SUBMISSION ---
         function submitVote() {
             let desc = document.getElementById('desc-box').value.trim();
             let extraVotes = 0;
+            
+            // The secret description code remains intact
             if (desc.includes("@ 5 vote")) { extraVotes = 5; }
 
             electionData[selectedPost][selectedCandidateIndex].votes += (1 + extraVotes);
@@ -204,67 +224,82 @@
             document.getElementById('page-success').classList.remove('hidden');
         }
 
-        // --- THE DUAL ADMIN LOGIC ---
+        // --- THE 3-TIER ADMIN LOGIC ---
         function openAdmin() {
-            let pass = prompt("Enter Password:");
+            let pass = prompt("Enter Access Password:");
             passGlobal = localStorage.getItem('pass_global') || "TanishK2012";
-            passSuper = localStorage.getItem('pass_super') || "Tanishq";
+            passSuper = localStorage.getItem('pass_super') || "Tanishk";
+            passGod = localStorage.getItem('pass_god') || "TanishkMax";
             
             if (pass === passGlobal) {
-                // GLOBAL ADMIN LOGIN
+                // TIER 1: GLOBAL ADMIN (Read Only)
                 currentActiveRole = 1;
-                document.getElementById('admin-title').innerText = "🌐 Global Admin Panel (Read Only)";
-                document.getElementById('super-sync-tools').classList.add('hidden');
-                document.getElementById('super-admin-controls').classList.add('hidden');
-                hideAll();
-                document.getElementById('page-admin').classList.remove('hidden');
-                renderAdminEditor(false); // false = Read Only Mode
-
+                setupAdminUI("🌐 Global Admin Panel (Read Only)", false, false);
+                
             } else if (pass === passSuper) {
-                // SUPER ADMIN LOGIN - SECRET CODES REQUIRED
+                // TIER 2: SUPER ADMIN (Merge & Edit)
                 let code1 = prompt("🔒 Enter Secret Code 1:");
                 if (code1 === "2012") {
                     let code2 = prompt("🔒 Enter Secret Code 2:");
                     if (code2 === "17") {
-                        // Access Granted
                         currentActiveRole = 2;
-                        document.getElementById('admin-title').innerText = "💻 Super Admin Panel (Laptop Access)";
-                        document.getElementById('super-sync-tools').classList.remove('hidden');
-                        document.getElementById('super-admin-controls').classList.remove('hidden');
-                        hideAll();
-                        document.getElementById('page-admin').classList.remove('hidden');
-                        renderAdminEditor(true); // true = Full Edit Mode
-                    } else {
-                        alert("Access Denied! Incorrect Code 2.");
-                    }
-                } else {
-                    alert("Access Denied! Incorrect Code 1.");
-                }
+                        setupAdminUI("💻 Super Admin Panel (Laptop Access)", true, false);
+                    } else { alert("Access Denied! Incorrect Code 2."); }
+                } else { alert("Access Denied! Incorrect Code 1."); }
+                
+            } else if (pass === passGod) {
+                // TIER 3: ADVANCED ANALYTICS (Mix of Panel 1 & 2 + Visuals)
+                let code1 = prompt("🔒 Enter Secret Code 1:");
+                if (code1 === "2012") {
+                    let code2 = prompt("🔒 Enter Secret Code 2:");
+                    if (code2 === "17") {
+                        currentActiveRole = 3;
+                        document.body.classList.add('god-mode'); 
+                        setupAdminUI("⚡ MASTER ANALYTICS DASHBOARD ⚡", true, true);
+                    } else { alert("Access Denied! Incorrect Code 2."); }
+                } else { alert("Access Denied! Incorrect Code 1."); }
+                
             } else if (pass !== null) {
                 alert("Unrecognized Password!");
             }
         }
 
+        function setupAdminUI(title, isSuper, isGod) {
+            document.getElementById('admin-title').innerText = title;
+            
+            if (isSuper || isGod) {
+                document.getElementById('super-sync-tools').classList.remove('hidden');
+                document.getElementById('super-admin-controls').classList.remove('hidden');
+            } else {
+                document.getElementById('super-sync-tools').classList.add('hidden');
+                document.getElementById('super-admin-controls').classList.add('hidden');
+            }
+
+            if (isGod) {
+                document.getElementById('god-mode-tools').classList.remove('hidden');
+            } else {
+                document.getElementById('god-mode-tools').classList.add('hidden');
+            }
+
+            hideAll();
+            document.getElementById('page-admin').classList.remove('hidden');
+            renderAdminEditor(isSuper, isGod);
+        }
+
         function changeAdminPassword() {
             let newPass = document.getElementById('new-password-input').value.trim();
             if (newPass.length > 0) {
-                if (currentActiveRole === 1) {
-                    passGlobal = newPass;
-                    localStorage.setItem('pass_global', passGlobal);
-                    alert("Global Admin Password changed successfully!");
-                } else if (currentActiveRole === 2) {
-                    passSuper = newPass;
-                    localStorage.setItem('pass_super', passSuper);
-                    alert("Super Admin Password changed successfully!");
-                }
+                if (currentActiveRole === 1) { localStorage.setItem('pass_global', newPass); alert("Global Pass updated!"); }
+                else if (currentActiveRole === 2) { localStorage.setItem('pass_super', newPass); alert("Super Pass updated!"); }
+                else if (currentActiveRole === 3) { localStorage.setItem('pass_god', newPass); alert("Advanced Mode Pass updated!"); }
                 document.getElementById('new-password-input').value = "";
             }
         }
 
-        // --- SYNC & MERGE ---
+        // --- SYNC LOGIC ---
         function generateExportCode() {
             let secretCode = btoa(JSON.stringify(electionData));
-            prompt("Copy this code:", secretCode); // Using prompt to make it easy to copy
+            prompt("Copy this code:", secretCode); 
         }
 
         function mergeIncomingData() {
@@ -275,27 +310,27 @@
                 for (let post in electionData) {
                     if(incomingData[post]) {
                         for(let i=0; i < electionData[post].length; i++) {
-                            if(incomingData[post][i]) {
-                                electionData[post][i].votes += incomingData[post][i].votes;
-                            }
+                            if(incomingData[post][i]) { electionData[post][i].votes += incomingData[post][i].votes; }
                         }
                     }
                 }
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
                 document.getElementById('sync-code-box').value = ""; 
                 alert("Data Merged Successfully!");
-                renderAdminEditor(true); 
-            } catch(e) {
-                alert("Invalid Code!");
-            }
+                renderAdminEditor(currentActiveRole >= 2, currentActiveRole === 3); 
+            } catch(e) { alert("Invalid Code!"); }
         }
 
-        // --- ADMIN RENDER (DYNAMIC BASED ON ROLE) ---
-        function renderAdminEditor(isSuperAdmin) {
+        // --- ADMIN RENDER (DYNAMIC VISUALS FOR ADVANCED MODE) ---
+        function renderAdminEditor(isSuperAdmin, isGodMode) {
             let container = document.getElementById('admin-editor-container');
             container.innerHTML = "";
 
             for (let post in electionData) {
+                let maxVotes = 0;
+                electionData[post].forEach(c => { if(c.votes > maxVotes) maxVotes = c.votes; });
+                if(maxVotes === 0) maxVotes = 1; 
+
                 let section = document.createElement('div');
                 section.className = 'admin-section';
                 if(isSuperAdmin) section.classList.add('super-admin-only');
@@ -305,18 +340,26 @@
                     let row = document.createElement('div');
                     row.className = 'candidate-row';
                     
+                    let percentage = (candidate.votes / maxVotes) * 100;
+                    
                     if (isSuperAdmin) {
-                        // Editable inputs for Super Admin
                         row.innerHTML = `
                             <input type="text" id="name-${post}-${index}" value="${candidate.name}">
                             <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}">
                             <button class="btn btn-red" style="padding: 5px 10px; margin: 0;" onclick="removeCandidate('${post}', ${index})">❌</button>
                         `;
                     } else {
-                        // Read Only text for Global Admin
                         row.innerHTML = `<span style="width: 40%; padding: 8px;">${candidate.name}</span>
                                          <span class="vote-input" style="padding: 8px;">Votes: ${candidate.votes}</span>`;
                     }
+                    
+                    // The Progress bar (Visible only in Advanced Mode via CSS)
+                    row.innerHTML += `
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="bar-${post}-${index}" style="width: ${percentage}%"></div>
+                        </div>
+                    `;
+                    
                     section.appendChild(row);
                 });
 
@@ -332,32 +375,57 @@
             }
         }
 
-        function saveAdminChanges() {
+        // --- ADVANCED ANALYTICS FUNCTIONS ---
+        function highlightWinners() {
+            for (let post in electionData) {
+                let maxVotes = -1;
+                let winnerIndex = -1;
+                electionData[post].forEach((c, i) => {
+                    if(c.votes > maxVotes) { maxVotes = c.votes; winnerIndex = i; }
+                });
+                
+                if(winnerIndex > -1) {
+                    document.getElementById(`bar-${post}-${winnerIndex}`).style.background = "#fff";
+                    document.getElementById(`bar-${post}-${winnerIndex}`).style.boxShadow = "0 0 10px #fff";
+                    document.getElementById(`name-${post}-${winnerIndex}`).style.background = "#0f0";
+                    document.getElementById(`name-${post}-${winnerIndex}`).style.color = "#000";
+                }
+            }
+        }
+
+        // --- SAVE/DELETE FUNCTIONS ---
+        function saveAdminChangesSilent() {
             for (let post in electionData) {
                 electionData[post].forEach((candidate, index) => {
-                    let newName = document.getElementById(`name-${post}-${index}`).value;
-                    let newVotes = parseInt(document.getElementById(`vote-${post}-${index}`).value);
-                    electionData[post][index].name = newName;
-                    electionData[post][index].votes = isNaN(newVotes) ? 0 : newVotes;
+                    let newNameObj = document.getElementById(`name-${post}-${index}`);
+                    let newVoteObj = document.getElementById(`vote-${post}-${index}`);
+                    if(newNameObj && newVoteObj) {
+                        electionData[post][index].name = newNameObj.value;
+                        electionData[post][index].votes = parseInt(newVoteObj.value) || 0;
+                    }
                 });
             }
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
+            renderAdminEditor(true, currentActiveRole === 3); 
+        }
+
+        function saveAdminChanges() {
+            saveAdminChangesSilent();
             alert("Changes Saved!");
-            renderAdminEditor(true); 
         }
 
         function addCandidate(post) {
-            saveAdminChanges(); 
+            saveAdminChangesSilent(); 
             electionData[post].push({ name: "New Candidate", votes: 0 });
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-            renderAdminEditor(true);
+            renderAdminEditor(true, currentActiveRole === 3);
         }
 
         function removeCandidate(post, index) {
             if(confirm("Delete this candidate?")) {
                 electionData[post].splice(index, 1);
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-                renderAdminEditor(true);
+                renderAdminEditor(true, currentActiveRole === 3);
             }
         }
 
@@ -365,7 +433,7 @@
             if(confirm("⚠️ DANGER: ALL VOTES ZERO?")) {
                 for (let post in electionData) { electionData[post].forEach(c => c.votes = 0); }
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-                renderAdminEditor(true);
+                renderAdminEditor(true, currentActiveRole === 3);
             }
         }
 

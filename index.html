@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Mega Election 2026</title>
+    <title>Narayana E Techno School Mega Election 2026</title>
     <style>
         /* NORMAL THEME */
         body { font-family: Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; text-align: center; transition: 0.5s; }
         .hidden { display: none !important; }
-        .btn { padding: 15px 25px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 8px; border: 2px solid #333; background: white; transition: 0.2s; font-weight: bold; }
+        .btn { padding: 15px 25px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 8px; border: 2px solid #333; background: white; transition: 0.2s; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; }
         .btn:hover { background: #ddd; }
         .btn-blue { background: #007bff; color: white; border: none; }
         .btn-red { background: #dc3545; color: white; border: none; }
         .btn-green { background: #28a745; color: white; border: none; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; background: #333; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 30px; transition: 0.5s; }
-        .header h2 { margin: 0; }
-        .admin-btn { padding: 10px 20px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #002147; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 30px; transition: 0.5s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .header h2 { margin: 0; font-size: 22px; }
+        .admin-btn { padding: 10px 20px; background: #ff0000; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 800px; margin: auto; transition: 0.5s; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 850px; margin: auto; transition: 0.5s; }
         textarea { width: 90%; padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; margin: 20px 0; height: 100px; }
         
         .admin-section { text-align: left; background: #eef; padding: 20px; margin: 15px 0; border-radius: 8px; border: 1px solid #ccc; transition: 0.5s; }
@@ -27,12 +27,14 @@
         .super-admin-only { border-left: 5px solid red; }
         
         .candidate-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
-        .candidate-row input { padding: 8px; font-size: 16px; width: 35%; }
-        .candidate-row .vote-input { width: 15%; font-weight: bold; color: blue;}
+        .candidate-row input { padding: 8px; font-size: 14px; }
+        .candidate-row .vote-input { font-weight: bold; color: blue;}
         
-        /* Progress Bar for God Mode */
+        /* Progress Bar for Advanced Mode */
         .progress-bar-container { width: 100%; background: #444; border-radius: 5px; margin-top: 5px; height: 10px; overflow: hidden; display: none; }
         .progress-bar { height: 100%; background: #00ff00; width: 0%; transition: width 0.5s; }
+
+        .footer-credits { text-align: center; margin-top: 60px; padding: 20px; font-weight: bold; font-size: 16px; color: #555; }
 
         /* =========================================
            ADVANCED ANALYTICS THEME (Triggered by JS)
@@ -42,24 +44,28 @@
         body.god-mode .header { background: #000; border: 1px solid #0f0; color: #0f0; box-shadow: 0 0 10px #0f0; }
         body.god-mode .admin-section { background: #000; border: 1px solid #0f0; color: #0f0; }
         body.god-mode input { background: #222; color: #0f0; border: 1px solid #0f0; }
-        body.god-mode .progress-bar-container { display: block; } /* Show bars only in Advanced Mode */
+        body.god-mode .progress-bar-container { display: block; } 
         body.god-mode h1, body.god-mode h2, body.god-mode h3 { color: #0f0 !important; text-shadow: 0 0 5px #0f0; }
+        body.god-mode .footer-credits { color: #0f0; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>🗳️ School Mega Election</h2>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="https://www.narayanagroup.com/assets/images/logo.png" alt="Narayana Logo" style="height: 45px; background: white; padding: 5px; border-radius: 5px;" onerror="this.src='https://via.placeholder.com/150x45?text=Narayana+School'">
+            <h2>🗳️ Narayana E Techno School Ajmer</h2>
+        </div>
         <button class="admin-btn" id="header-admin-btn" onclick="openAdmin()">Admin Access</button>
     </div>
 
     <div id="page-posts" class="container">
-        <h1>Select a Post to Vote</h1>
-        <div id="posts-container"></div>
+        <h1 style="color: #002147;">Selecting the representative of Narayana E Techno School Ajmer</h1>
+        <div id="posts-container" style="margin-top: 30px;"></div>
     </div>
 
     <div id="page-candidates" class="container hidden">
-        <h1 id="current-post-title">Post Name</h1>
+        <h1 id="current-post-title" style="color: #002147;">Post Name</h1>
         <h2>Select Your Representative:</h2>
         <div id="candidates-container"></div>
         <br><br>
@@ -111,12 +117,16 @@
         
         <div id="super-admin-controls" class="hidden">
             <br>
-            <button class="btn btn-green" onclick="saveAdminChanges()">💾 Save Vote/Name Changes</button>
+            <button class="btn btn-green" onclick="saveAdminChanges()">💾 Save Vote, Name & Image Changes</button>
             <button class="btn btn-red" onclick="resetAllVotes()">⚠️ Reset All Votes to 0</button>
         </div>
         
         <br><br>
         <button class="btn" style="background: grey; color: white;" onclick="closeAdmin()">⬅ Exit Panel</button>
+    </div>
+
+    <div class="footer-credits">
+        created by Tanishk grade 9th
     </div>
 
     <script>
@@ -127,22 +137,22 @@
         let passSuper = localStorage.getItem('pass_super') || "Tanishk";
         let passGod = localStorage.getItem('pass_god') || "TanishkMax";
 
-        let currentActiveRole = 0; // 1 = Global, 2 = Super, 3 = Advanced Analytics
+        let currentActiveRole = 0; 
         
-        // NEW: ANTI-CHEAT DUPLICATE MERGE TRACKER
+        // ANTI-CHEAT DUPLICATE MERGE TRACKER
         let usedSyncCodes = JSON.parse(localStorage.getItem('used_sync_codes')) || [];
 
         // ==========================================
-        // DATABASE SETUP
+        // DATABASE SETUP (Now with Image support)
         // ==========================================
         const defaultData = {
-            "Head Boy": Array.from({length: 5}, (_, i) => ({ name: `HB Candidate ${i+1}`, votes: 0 })),
-            "Head Girl": Array.from({length: 5}, (_, i) => ({ name: `HG Candidate ${i+1}`, votes: 0 })),
-            "Red House Captain": Array.from({length: 5}, (_, i) => ({ name: `Red Candidate ${i+1}`, votes: 0 })),
-            "Blue House Captain": Array.from({length: 5}, (_, i) => ({ name: `Blue Candidate ${i+1}`, votes: 0 })),
-            "Green House Captain": Array.from({length: 5}, (_, i) => ({ name: `Green Candidate ${i+1}`, votes: 0 })),
-            "Yellow House Captain": Array.from({length: 5}, (_, i) => ({ name: `Yellow Candidate ${i+1}`, votes: 0 })),
-            "Sports Captain": Array.from({length: 5}, (_, i) => ({ name: `Sports Candidate ${i+1}`, votes: 0 }))
+            "Head Boy": Array.from({length: 5}, (_, i) => ({ name: `HB Candidate ${i+1}`, votes: 0, image: "" })),
+            "Head Girl": Array.from({length: 5}, (_, i) => ({ name: `HG Candidate ${i+1}`, votes: 0, image: "" })),
+            "Red House Captain": Array.from({length: 5}, (_, i) => ({ name: `Red Candidate ${i+1}`, votes: 0, image: "" })),
+            "Blue House Captain": Array.from({length: 5}, (_, i) => ({ name: `Blue Candidate ${i+1}`, votes: 0, image: "" })),
+            "Green House Captain": Array.from({length: 5}, (_, i) => ({ name: `Green Candidate ${i+1}`, votes: 0, image: "" })),
+            "Yellow House Captain": Array.from({length: 5}, (_, i) => ({ name: `Yellow Candidate ${i+1}`, votes: 0, image: "" })),
+            "Sports Captain": Array.from({length: 5}, (_, i) => ({ name: `Sports Candidate ${i+1}`, votes: 0, image: "" }))
         };
 
         let electionData = JSON.parse(localStorage.getItem('mega_evm_data')) || defaultData;
@@ -186,10 +196,15 @@
             
             let container = document.getElementById('candidates-container');
             container.innerHTML = "";
+            
             electionData[post].forEach((candidate, index) => {
                 let btn = document.createElement('button');
                 btn.className = 'btn';
-                btn.innerText = candidate.name;
+                
+                // Show Image if available
+                let imgHtml = candidate.image ? `<img src="${candidate.image}" alt="Photo" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 15px;">` : "";
+                
+                btn.innerHTML = `${imgHtml} ${candidate.name}`;
                 btn.onclick = () => openDescription(index);
                 container.appendChild(btn);
                 container.appendChild(document.createElement('br'));
@@ -305,7 +320,6 @@
             let code = document.getElementById('sync-code-box').value.trim();
             if(!code) return;
 
-            // BUG FIX: Check if this exact code string was already pasted before
             if(usedSyncCodes.includes(code)) {
                 alert("⚠️ FRAUD ALERT: You have already merged this PC's code! Cannot add the same votes twice.");
                 document.getElementById('sync-code-box').value = ""; 
@@ -322,10 +336,8 @@
                     }
                 }
                 
-                // Add this code to memory so it can never be used again
                 usedSyncCodes.push(code);
                 localStorage.setItem('used_sync_codes', JSON.stringify(usedSyncCodes));
-
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
                 document.getElementById('sync-code-box').value = ""; 
                 alert("✅ Data Merged Successfully!");
@@ -333,7 +345,7 @@
             } catch(e) { alert("❌ Invalid Code Format!"); }
         }
 
-        // --- ADMIN RENDER (DYNAMIC VISUALS FOR ADVANCED MODE) ---
+        // --- ADMIN RENDER (NOW WITH IMAGE INPUT SUPPORT) ---
         function renderAdminEditor(isSuperAdmin, isGodMode) {
             let container = document.getElementById('admin-editor-container');
             container.innerHTML = "";
@@ -356,12 +368,14 @@
                     
                     if (isSuperAdmin) {
                         row.innerHTML = `
-                            <input type="text" id="name-${post}-${index}" value="${candidate.name}">
-                            <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}">
+                            <input type="text" id="name-${post}-${index}" value="${candidate.name}" style="width: 25%;" placeholder="Name">
+                            <input type="text" id="img-${post}-${index}" value="${candidate.image || ''}" style="width: 25%;" placeholder="Paste Image URL">
+                            <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}" style="width: 15%;">
                             <button class="btn btn-red" style="padding: 5px 10px; margin: 0;" onclick="removeCandidate('${post}', ${index})">❌</button>
                         `;
                     } else {
-                        row.innerHTML = `<span style="width: 40%; padding: 8px;">${candidate.name}</span>
+                        let imgDisplay = candidate.image ? `<img src="${candidate.image}" style="width: 30px; height: 30px; border-radius: 50%; vertical-align: middle; margin-right: 10px;">` : "";
+                        row.innerHTML = `<span style="width: 50%; padding: 8px;">${imgDisplay}${candidate.name}</span>
                                          <span class="vote-input" style="padding: 8px;">Votes: ${candidate.votes}</span>`;
                     }
                     
@@ -404,15 +418,20 @@
             }
         }
 
-        // --- SAVE/DELETE FUNCTIONS ---
+        // --- SAVE/DELETE FUNCTIONS (UPDATED FOR IMAGES) ---
         function saveAdminChangesSilent() {
             for (let post in electionData) {
                 electionData[post].forEach((candidate, index) => {
                     let newNameObj = document.getElementById(`name-${post}-${index}`);
                     let newVoteObj = document.getElementById(`vote-${post}-${index}`);
+                    let newImgObj = document.getElementById(`img-${post}-${index}`);
+                    
                     if(newNameObj && newVoteObj) {
                         electionData[post][index].name = newNameObj.value;
                         electionData[post][index].votes = parseInt(newVoteObj.value) || 0;
+                    }
+                    if(newImgObj) {
+                        electionData[post][index].image = newImgObj.value.trim();
                     }
                 });
             }
@@ -427,7 +446,7 @@
 
         function addCandidate(post) {
             saveAdminChangesSilent(); 
-            electionData[post].push({ name: "New Candidate", votes: 0 });
+            electionData[post].push({ name: "New Candidate", votes: 0, image: "" });
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
             renderAdminEditor(true, currentActiveRole === 3);
         }
@@ -445,7 +464,6 @@
                 for (let post in electionData) { electionData[post].forEach(c => c.votes = 0); }
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
                 
-                // BUG FIX: Clear the used codes memory so the next election works fresh
                 usedSyncCodes = [];
                 localStorage.setItem('used_sync_codes', JSON.stringify(usedSyncCodes));
 

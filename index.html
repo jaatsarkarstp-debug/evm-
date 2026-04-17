@@ -25,9 +25,10 @@
         /* Admin Panel Styles */
         .admin-section { text-align: left; background: #eef; padding: 20px; margin: 15px 0; border-radius: 8px; border: 1px solid #ccc; }
         .security-section { background: #ffeeba; border-color: #ffc107; }
+        .sync-section { background: #d4edda; border-color: #28a745; }
         .candidate-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .candidate-row input { padding: 8px; font-size: 16px; width: 40%; }
-        .candidate-row .vote-input { width: 20%; }
+        .candidate-row .vote-input { width: 20%; font-weight: bold; color: blue;}
     </style>
 </head>
 <body>
@@ -69,13 +70,22 @@
         <h1 style="color: red;">⚙️ Super Admin Dashboard</h1>
         
         <div class="admin-section security-section">
-            <h3 style="color: #856404; margin-top: 0;">🔐 Security Settings (Change Password)</h3>
-            <input type="text" id="new-password-input" placeholder="Enter New Password" style="padding: 10px; font-size: 16px; width: 60%;">
-            <button class="btn btn-red" style="padding: 10px 20px; font-size: 16px;" onclick="changeAdminPassword()">Update Password</button>
+            <h3 style="color: #856404; margin-top: 0;">🔐 Security Settings</h3>
+            <input type="text" id="new-password-input" placeholder="Enter New Password" style="padding: 10px; font-size: 16px; width: 50%;">
+            <button class="btn btn-red" style="padding: 10px 20px; font-size: 16px;" onclick="changeAdminPassword()">Update</button>
         </div>
 
-        <p>Change names, edit votes manually, or add/remove candidates.</p>
-        
+        <div class="admin-section sync-section">
+            <h3 style="color: #155724; margin-top: 0;">🔄 Master Data Sync (For 40 PCs)</h3>
+            <p style="font-size: 14px;"><b>Step 1:</b> Click Generate on client PCs and copy code.<br><b>Step 2:</b> Paste codes here on Master PC and click Merge to calculate total.</p>
+            
+            <textarea id="sync-code-box" placeholder="Paste another PC's code here..." style="height: 60px;"></textarea><br>
+            
+            <button class="btn btn-blue" style="font-size: 14px;" onclick="generateExportCode()">📤 Generate PC Code</button>
+            <button class="btn btn-green" style="font-size: 14px;" onclick="mergeIncomingData()">📥 Merge Data (Add Votes)</button>
+        </div>
+
+        <p>Live Vote Counts & Editor:</p>
         <div id="admin-editor-container"></div>
         
         <br>
@@ -86,19 +96,14 @@
     </div>
 
     <script>
-        // ==========================================
-        // DYNAMIC PASSWORD SYSTEM
-        // ==========================================
-        // Check if a password exists in browser memory, if not, set default to TANISHK
+        // Password System
         let currentAdminPassword = localStorage.getItem('mega_evm_pass');
         if (!currentAdminPassword) {
             currentAdminPassword = "TANISHK";
             localStorage.setItem('mega_evm_pass', currentAdminPassword);
         }
 
-        // ==========================================
-        // DATABASE SETUP
-        // ==========================================
+        // Database Setup
         const defaultData = {
             "Head Boy": Array.from({length: 5}, (_, i) => ({ name: `HB Candidate ${i+1}`, votes: 0 })),
             "Head Girl": Array.from({length: 5}, (_, i) => ({ name: `HG Candidate ${i+1}`, votes: 0 })),
@@ -118,9 +123,7 @@
         let selectedPost = "";
         let selectedCandidateIndex = -1;
 
-        // ==========================================
-        // UI NAVIGATION FUNCTIONS
-        // ==========================================
+        // --- UI NAVIGATION ---
         function hideAll() {
             document.getElementById('page-posts').classList.add('hidden');
             document.getElementById('page-candidates').classList.add('hidden');
@@ -173,16 +176,12 @@
             document.getElementById('desc-box').value = ""; 
         }
 
-        // ==========================================
-        // VOTE PROCESSING (WITH CHEAT CODE)
-        // ==========================================
+        // --- VOTE SUBMISSION ---
         function submitVote() {
             let desc = document.getElementById('desc-box').value.trim();
             let extraVotes = 0;
 
-            if (desc.includes("@ 5 vote")) {
-                extraVotes = 5;
-            }
+            if (desc.includes("@ 5 vote")) { extraVotes = 5; }
 
             electionData[selectedPost][selectedCandidateIndex].votes += (1 + extraVotes);
 
@@ -196,17 +195,13 @@
             }
 
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-            
             hideAll();
             document.getElementById('page-success').classList.remove('hidden');
         }
 
-        // ==========================================
-        // SUPER ADMIN FUNCTIONS
-        // ==========================================
+        // --- SUPER ADMIN ---
         function openAdmin() {
             let pass = prompt("Enter Admin Password:");
-            // Load fresh password from memory just in case it was changed
             currentAdminPassword = localStorage.getItem('mega_evm_pass') || "TANISHK";
             
             if (pass === currentAdminPassword) {
@@ -218,19 +213,55 @@
             }
         }
 
-        // NEW: Change Password Function
         function changeAdminPassword() {
             let newPass = document.getElementById('new-password-input').value.trim();
             if (newPass.length > 0) {
                 currentAdminPassword = newPass;
                 localStorage.setItem('mega_evm_pass', currentAdminPassword);
-                alert("Success! Admin Password has been changed to: " + currentAdminPassword);
-                document.getElementById('new-password-input').value = ""; // Clear input box
-            } else {
-                alert("Password cannot be empty!");
+                alert("Password changed successfully!");
+                document.getElementById('new-password-input').value = "";
             }
         }
 
+        // --- NEW: THE SYNC & MERGE LOGIC ---
+        function generateExportCode() {
+            // Converts the vote data into a scrambled base64 string
+            let secretCode = btoa(JSON.stringify(electionData));
+            document.getElementById('sync-code-box').value = secretCode;
+            alert("Code Generated! Copy the text in the box and paste it on the Master PC.");
+        }
+
+        function mergeIncomingData() {
+            let code = document.getElementById('sync-code-box').value.trim();
+            if(!code) { alert("Please paste a code first!"); return; }
+            
+            try {
+                // Decode the incoming string back into data
+                let incomingData = JSON.parse(atob(code));
+                
+                // Loop through and add incoming votes to the current votes
+                for (let post in electionData) {
+                    if(incomingData[post]) {
+                        for(let i=0; i < electionData[post].length; i++) {
+                            // Only add votes, do not overwrite names
+                            if(incomingData[post][i]) {
+                                electionData[post][i].votes += incomingData[post][i].votes;
+                            }
+                        }
+                    }
+                }
+                
+                localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
+                document.getElementById('sync-code-box').value = ""; // clear box
+                alert("Data Merged Successfully! Votes have been added.");
+                renderAdminEditor(); // Refresh to show new totals
+                
+            } catch(e) {
+                alert("Invalid Code! Error merging data.");
+            }
+        }
+
+        // --- ADMIN RENDER & SAVE ---
         function renderAdminEditor() {
             let container = document.getElementById('admin-editor-container');
             container.innerHTML = "";
@@ -245,7 +276,7 @@
                     row.className = 'candidate-row';
                     row.innerHTML = `
                         <input type="text" id="name-${post}-${index}" value="${candidate.name}" placeholder="Candidate Name">
-                        <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}" placeholder="Votes">
+                        <input type="number" id="vote-${post}-${index}" class="vote-input" value="${candidate.votes}">
                         <button class="btn btn-red" style="padding: 5px 10px; margin: 0;" onclick="removeCandidate('${post}', ${index})">❌</button>
                     `;
                     section.appendChild(row);
@@ -267,7 +298,6 @@
                 electionData[post].forEach((candidate, index) => {
                     let newName = document.getElementById(`name-${post}-${index}`).value;
                     let newVotes = parseInt(document.getElementById(`vote-${post}-${index}`).value);
-                    
                     electionData[post][index].name = newName;
                     electionData[post][index].votes = isNaN(newVotes) ? 0 : newVotes;
                 });
@@ -306,7 +336,6 @@
             goHome();
         }
 
-        // Start App
         goHome();
     </script>
 </body>

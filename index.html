@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>School Election 2026</title>
+    <style>
+        body { text-align: center; font-family: Arial; background-color: #eef2f3; padding: 50px; }
+        .hidden { display: none; }
+        .btn { padding: 15px 30px; margin: 10px; font-size: 20px; cursor: pointer; border-radius: 8px; border: 2px solid black; background: white; }
+        .btn:hover { background: #ddd; }
+        #admin-panel { background: white; padding: 30px; margin-top: 20px; border-radius: 10px; border: 2px solid red; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <div id="voting-page">
+        <h1>School Election 2026</h1>
+        <h2>Select Your Candidate:</h2>
+        <button class="btn" onclick="vote('A')">Vote for Candidate A</button><br>
+        <button class="btn" onclick="vote('B')">Vote for Candidate B</button><br>
+        <button class="btn" onclick="vote('C')">Vote for Candidate C</button><br>
+        
+        <br><br><br>
+        <button onclick="showAdmin()" style="font-size: 14px; opacity: 0.6; cursor: pointer;">Admin Results</button>
+    </div>
+
+    <div id="success-page" class="hidden">
+        <h1 style="color: green;">Vote Recorded!</h1>
+        <button class="btn" onclick="goBack()" style="background: lightblue;">Next Voter</button>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+        <h1 style="color: red;">Live Results</h1>
+        <h2 id="resA">Candidate A: 0</h2>
+        <h2 id="resB">Candidate B: 0</h2>
+        <h2 id="resC">Candidate C: 0</h2>
+        <br>
+        <button class="btn" onclick="resetVotes()" style="background: red; color: white;">Reset All Votes</button>
+        <button class="btn" onclick="hideAdmin()">Close Admin</button>
+    </div>
+
+    <script>
+        // Browser ki memory (LocalStorage) me votes save honge
+        let votes = JSON.parse(localStorage.getItem('school_votes')) || { A: 0, B: 0, C: 0 };
+
+        // Vote dalne ka function
+        function vote(candidate) {
+            votes[candidate]++; // Vote badhao
+            localStorage.setItem('school_votes', JSON.stringify(votes)); // Save karo
+            
+            document.getElementById('voting-page').classList.add('hidden');
+            document.getElementById('success-page').classList.remove('hidden');
+        }
+
+        // Wapas voting screen par aane ka function
+        function goBack() {
+            document.getElementById('success-page').classList.add('hidden');
+            document.getElementById('voting-page').classList.remove('hidden');
+        }
+
+        // Admin page dikhane ka function (Simple Password: 1234)
+        function showAdmin() {
+            let p = prompt("Enter Admin Password:");
+            if (p === "1234") {
+                document.getElementById('voting-page').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                
+                // Screen par results update karo
+                document.getElementById('resA').innerText = "Candidate A: " + votes.A;
+                document.getElementById('resB').innerText = "Candidate B: " + votes.B;
+                document.getElementById('resC').innerText = "Candidate C: " + votes.C;
+            } else {
+                alert("Wrong Password bhai!");
+            }
+        }
+
+        // Admin page chupane ka function
+        function hideAdmin() {
+            document.getElementById('admin-panel').classList.add('hidden');
+            document.getElementById('voting-page').classList.remove('hidden');
+        }
+
+        // Sab zero karne ka function
+        function resetVotes() {
+            if(confirm("Pakka sab delete karna hai?")) {
+                votes = { A: 0, B: 0, C: 0 };
+                localStorage.setItem('school_votes', JSON.stringify(votes));
+                
+                // Screen par wapas 0 dikhao
+                document.getElementById('resA').innerText = "Candidate A: 0";
+                document.getElementById('resB').innerText = "Candidate B: 0";
+                document.getElementById('resC').innerText = "Candidate C: 0";
+            }
+        }
+    </script>
+
+</body>
+</html>
